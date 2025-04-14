@@ -1,0 +1,4 @@
+# This snakefile will do the following:
+# - annotate data with bakta
+# - run MASH on sequence relative to the sketches from the pangenome
+# - run CD-HIT2D against pangenome sequences
