@@ -1,5 +1,6 @@
 Work/
 **/.ipynb_checkpoints/
+**/__pycache/
 .keras/
 **/.snakemake/
 Data/Ebacter_df_genes.csv

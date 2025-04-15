@@ -4,6 +4,9 @@
 # - run CD-HIT2D against pangenome sequences
 
 SAMPLES = list(glob_wildcards('Input_Strains/{sample}.fna')[0])
+print("Samples to be Processed:")
+for sample in SAMPLES:
+    print(sample)
 
 rule all:
     input:
@@ -86,7 +89,7 @@ rule cd_hit:
         outpath =  "Work/bakta/{sample}/cd_hit/{sample}"
     shell:
         """
-            cd-hit-2d -i Data/rep_alleles_nr.faa -i2 {input} -o {params.outpath} -c .8 -n 5
+            cd-hit-2d -i Data/rep_alleles.faa -i2 {input} -o {params.outpath} -c .8 -n 5 -aL 0.8 -T 0 -M 0 -g 1
         """
 
 rule combine_cd_hit_locations:

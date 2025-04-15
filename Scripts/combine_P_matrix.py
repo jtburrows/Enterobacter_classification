@@ -6,7 +6,7 @@ def main(argv):
     input_file = argv[1]
     output_file = argv[2]
 
-    P_matrix = pd.read_pickle('Data/Ebacter_strain_by_gene.pickle.gz')
+    P_matrix = pd.read_csv('Data/df_genes_complete.csv')
     metadata = pd.read_csv('Data/metadata.csv', dtype = 'object').set_index('genome_id')
     
     new_P_matrix = defaultdict(dict)
@@ -25,7 +25,7 @@ def main(argv):
                         present = False
                     else:
                         if input_name not in l:
-                            cluster = l.split('>')[1].split('...')[0]
+                            cluster = l.split('>')[1].split('...')[0].split('A')[0]
                         if input_name in l:
                             present = True
                 
