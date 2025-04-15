@@ -1,0 +1,18 @@
+name: ebacter_classification
+channels:
+  - bioconda
+  - defaults
+  - conda-forge
+dependencies:
+  - python
+  - numpy
+  - pandas
+  - singularity 
+  - notebook
+  - seaborn
+  - numpy
+  - jupyterlab
+  - scipy
+  - scikit-learn
+  - singularity>=3
+  - snakemake>=9

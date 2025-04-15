@@ -2,3 +2,110 @@
 # - annotate data with bakta
 # - run MASH on sequence relative to the sketches from the pangenome
 # - run CD-HIT2D against pangenome sequences
+
+SAMPLES = list(glob_wildcards('Input_Strains/{sample}.fna')[0])
+
+rule all:
+    input:
+        'Data/combined_sketch.msh',
+        'Data/rep_alleles_nr.faa',
+        expand("Work/Mash/{sample}_distances.txt", sample=SAMPLES),
+        expand("Work/bakta/{sample}/cd_hit/{sample}.clstr", sample=SAMPLES),
+        "Work/combined_mash_distances.csv",
+        "Work/combined_P_matrix.csv",
+
+rule mash:
+    input:
+        'Input_Strains/{sample}.fna'
+    output:
+        "Work/Mash/{sample}_distances.txt"
+    singularity:
+        'docker://staphb/mash:latest'
+    shell:
+        """
+            mash dist Data/combined_sketch.msh {input} > {output}
+        """
+
+rule get_db:
+    output:
+        directory("Work/db-light")
+    container:
+        'docker://oschwengers/bakta@sha256:86036e6a8eb836a3dd2d53e84cc3e63623e56b7f192fac12f8cb5da56859b039'
+    shell:
+        """
+        wget https://zenodo.org/record/10522951/files/db-light.tar.gz && tar -xzf db-light.tar.gz && rm db-light.tar.gz && amrfinder_update --force_update --database db-light/amrfinderplus-db
+        mv db-light Work/db-light
+        """ #TODO rename dB and add as config var
+
+rule batka_annotation: # https://github.com/oschwengers/bakta
+    input:
+        'Input_Strains/{sample}.fna',
+        "Work/db-light"
+    output:
+        "Work/bakta/{sample}/{sample}.fna",
+        "Work/bakta/{sample}/{sample}.gff3",
+        "Work/bakta/{sample}/{sample}.faa"
+    container:
+        'docker://oschwengers/bakta@sha256:86036e6a8eb836a3dd2d53e84cc3e63623e56b7f192fac12f8cb5da56859b039'
+    threads: 4
+    params:
+        locus_tag=lambda wildcards: wildcards.sample
+    shell:
+        "bakta --db Work/db-light --output Work/bakta/{wildcards.sample} --locus-tag {params.locus_tag} --prefix {wildcards.sample} --threads {threads} --force {input[0]}"
+
+rule combine_mash_locations:
+    input:
+        expand("Work/Mash/{sample}_distances.txt", sample=SAMPLES)
+    output:
+        temporary("Work/Mash/mash_paths.txt")
+    shell:
+        """
+            printf "%s\n" {input} > {output}
+        """
+
+rule combine_mash:
+    input:
+        temporary("Work/Mash/mash_paths.txt")
+    output:
+        "Work/combined_mash_distances.csv"
+    shell:
+        """
+            python3 Scripts/combine_mash.py {input} {output}
+        """
+
+rule cd_hit:
+    input:
+        "Work/bakta/{sample}/{sample}.faa"
+    output:
+        "Work/bakta/{sample}/cd_hit/{sample}.clstr"
+    container:
+        'docker://biocontainers/cd-hit@sha256:e4a7cf8813264803b1229b2dd2aaa396a6020798bc64595d2b880a5aad01d927'
+    threads:
+        4
+    params:
+        outpath =  "Work/bakta/{sample}/cd_hit/{sample}"
+    shell:
+        """
+            cd-hit-2d -i Data/rep_alleles_nr.faa -i2 {input} -o {params.outpath} -c .8 -n 5
+        """
+
+rule combine_cd_hit_locations:
+    input:
+        expand("Work/bakta/{sample}/cd_hit/{sample}.clstr", sample=SAMPLES)
+    output:
+        temporary("Work/bakta/cd_hit_paths.txt")
+    shell:
+        """
+            printf "%s\n" {input} > {output}
+        """
+
+rule combine_cd_hit:
+    input:
+        temporary("Work/bakta/cd_hit_paths.txt")
+    output:
+        "Work/combined_P_matrix.csv"
+    shell:
+        """
+            python3 Scripts/combine_P_matrix.py {input} {output}
+        """
+    

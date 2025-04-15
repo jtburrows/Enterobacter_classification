@@ -1,0 +1,4 @@
+Work/
+**/.ipynb_checkpoints/
+.keras/
+**/.snakemake/
