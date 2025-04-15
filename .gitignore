@@ -2,3 +2,4 @@ Work/
 **/.ipynb_checkpoints/
 .keras/
 **/.snakemake/
+Data/Ebacter_df_genes.csv

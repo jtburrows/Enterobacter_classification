@@ -6,7 +6,7 @@ def main(argv):
     input_file = argv[1]
     output_file = argv[2]
 
-    P_matrix = pd.read_pickle('Data/Ebacter_strain_by_gene.pickle')
+    P_matrix = pd.read_pickle('Data/Ebacter_strain_by_gene.pickle.gz')
     metadata = pd.read_csv('Data/metadata.csv', dtype = 'object').set_index('genome_id')
     
     new_P_matrix = defaultdict(dict)
